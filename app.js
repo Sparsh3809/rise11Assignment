@@ -4,15 +4,14 @@ if(process.env.NODE_ENV !== 'production'){
 
 const express = require('express');
 const app = express();
+const bodyParser = require('body-parser');
 const User=require('./models/user');
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
-const secret = process.env.SECRET;
 const dbUrl = process.env.DB_URL;
-console.log(dbUrl);
-const MongoStore  = require('connect-mongo');
 mongoose.connect(dbUrl, {
     useNewUrlParser: true,
+    useCreateIndex:true,
     useUnifiedTopology: true
 });
 const db = mongoose.connection;
@@ -20,21 +19,21 @@ db.on("error", console.error.bind(console,"Connection error"));
 db.once("open",()=>{
     console.log("Database Connected");
 })
-const store= MongoStore.create({
-    mongoUrl:dbUrl,
-    crypto:{secret},
-    
-    touchAfter:24*60*60
-});
-store.on("error",function(e){
-    console.log("Session Store Error",e)
-})
 app.use(express.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+app.get('/signup', (req, res)=>{
+    res.render('signup');
+});
 
 app.post('/signup',async(req,res)=>{
     const {email, username, password} = req.body;
+    console.log(email, username, password);
     const user = new User({email, username, password});
+    console.log(user);
     await user.save();
+    res.send("Successfull registration");
 })
 
 app.post('/login',async(req,res)=>{
@@ -44,11 +43,11 @@ app.post('/login',async(req,res)=>{
         res.send("User Found");
     }
     else {
-        res.send("The username or password is incorrect");
+        res.send("The Email or Password is incorrect");
     }
     
 })
 
-app.listen(3000 , ()=>{
-    console.log("Listening on port 3000");
+app.listen(8000 , ()=>{
+    console.log("Listening on port 8000");
 })
