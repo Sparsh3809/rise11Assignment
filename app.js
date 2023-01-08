@@ -7,7 +7,9 @@ const app = express();
 const bodyParser = require('body-parser');
 const User=require('./models/user');
 const mongoose = require('mongoose');
+const mailChecker=require('mailchecker');
 const bcrypt = require('bcrypt');
+const emailCheck=require('email-check');
 const dbUrl = process.env.DB_URL;
 mongoose.connect(dbUrl, {
     useNewUrlParser: true,
@@ -29,11 +31,15 @@ app.get('/signup', (req, res)=>{
 
 app.post('/signup',async(req,res)=>{
     const {email, username, password} = req.body;
-    console.log(email, username, password);
-    const user = new User({email, username, password});
-    console.log(user);
-    await user.save();
-    res.send("Successfull registration");
+    if(mailChecker.isValid(email)){
+        const user=new User({email,username,password});
+        console.log(user);
+        await user.save();
+        res.send("Successful registration");
+    }
+    else{
+        res.send("Invalid email");
+    }
 })
 
 app.post('/login',async(req,res)=>{
